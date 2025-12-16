@@ -49,21 +49,56 @@
       </div>
     </div>
 
-    <div class="flex justify-between items-center mb-4 flex-shrink-0">
-      <div class="inline-flex items-center space-x-2 p-1 bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-xl ml-auto"> <span class="text-xs text-slate-400">时间范围:</span>
-        <select 
-          v-model="displayTimeRange"
-          @change="handleTimeRangeChange"
-          class="bg-slate-800/50 text-white text-xs py-1 px-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 border-none cursor-pointer"
+    <div class="flex justify-end items-center mb-4 flex-shrink-0 space-x-3">
+        <div class="inline-flex items-center space-x-2 p-1 bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-xl"> 
+            <span class="text-xs text-slate-400">自动刷新:</span>
+            <select 
+                v-model="autoRefreshInterval"
+                @change="handleAutoRefreshChange"
+                class="bg-slate-800/50 text-white text-xs py-1 px-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 border-none cursor-pointer"
+            >
+                <option :value="0">关闭</option>
+                <option :value="30000">30 秒</option>
+                <option :value="60000">1 分钟</option>
+                <option :value="120000">2 分钟</option>
+                <option :value="300000">5 分钟</option>
+            </select>
+        </div>
+        
+        <button 
+            @click="handleManualRefresh"
+            :disabled="loading"
+            class="inline-flex items-center space-x-1 p-2 text-xs font-medium rounded-xl transition"
+            :class="loading ? 'bg-slate-700/50 text-slate-500 cursor-not-allowed' : 'bg-slate-900/50 backdrop-blur-xl border border-slate-800 text-white hover:border-indigo-500/50'"
         >
-          <option value="12h">最近 12 小时</option>
-          <option value="24h">最近 24 小时</option>
-          <option value="3d">最近 3 天</option>
-          <option value="7d">最近 7 天</option>
-          <option value="30d">最近 30 天</option>
-          <option value="custom">自定义时间</option>
-        </select>
-      </div>
+            <svg 
+                class="w-4 h-4" 
+                :class="{'animate-spin': loading}"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+            >
+                <path d="M21.5 2c-.5 0-1 .4-1 1v2c0 .6.4 1 1 1s1-.4 1-1V3c0-.6-.4-1-1-1zm-6 0c.6 0 1 .4 1 1v2c0 .6-.4 1-1 1s-1-.4-1-1V3c0-.6.4-1 1-1zm-6 0c.6 0 1 .4 1 1v2c0 .6-.4 1-1 1s-1-.4-1-1V3c0-.6.4-1 1-1zM2 12a10 10 0 1 1 4-7.9 1 1 0 0 0-1.7-.9 12 12 0 1 0 4.2 14.8c-.4.5-.4 1.2 0 1.7a1 1 0 0 0 1.4 0 12 12 0 0 0 3.1-9.4A1 1 0 0 0 15 11h-2a1 1 0 0 0-1 1z" clip-rule="evenodd" fill-rule="evenodd"/>
+            </svg>
+
+            <span>{{ loading ? '刷新中...' : '手动刷新' }}</span>
+        </button>
+
+        <div class="inline-flex items-center space-x-2 p-1 bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-xl"> 
+            <span class="text-xs text-slate-400">时间范围:</span>
+            <select 
+                v-model="displayTimeRange"
+                @change="handleTimeRangeChange"
+                class="bg-slate-800/50 text-white text-xs py-1 px-2 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 border-none cursor-pointer"
+            >
+                <option value="12h">最近 12 小时</option>
+                <option value="24h">最近 24 小时</option>
+                <option value="3d">最近 3 天</option>
+                <option value="7d">最近 7 天</option>
+                <option value="30d">最近 30 天</option>
+                <option value="custom">自定义时间</option>
+            </select>
+        </div>
     </div>
 
     <div class="flex-grow min-h-0 overflow-y-auto space-y-4 custom-scrollbar">
@@ -195,12 +230,15 @@
 </template>
 
 <script>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue' 
+
+// 默认自动刷新间隔 (1 分钟)
+const DEFAULT_REFRESH_INTERVAL = 60000; 
 
 export default {
   name: 'Dashboard',
   setup() {
-    // SVG 图标定义
+    // SVG 图标定义 (不变)
     const icons = {
       mail: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>',
       check: '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
@@ -215,24 +253,27 @@ export default {
     const showDatePicker = ref(false)
     const startDate = ref('')
     const endDate = ref('')
-    const loading = ref(true)
+    const loading = ref(false) // 初始值改为 false，确保首次加载正常
     const summaryData = ref([])
     const detectionRecords = ref([])
     const isMaximizedChart1 = ref(false)
     const isMaximizedChart2 = ref(false)
     
+    // 自动刷新状态
+    const autoRefreshInterval = ref(DEFAULT_REFRESH_INTERVAL) // 默认 1 分钟
+    let autoRefreshTimer = null;
+    
     // 用于在 loading 状态下传递数据
     let lastTrendData = null;
     let lastActionData = null;
 
-
-    // 图表容器
+    // 图表容器和实例
     const chartContainer = ref(null)
     const actionChartContainer = ref(null)
     let chartInstance = null
     let actionChartInstance = null
 
-    // 获取 echarts（从全局或导入）
+    // 获取 echarts
     const getEcharts = () => {
       if (window.echarts) {
         return window.echarts
@@ -241,19 +282,65 @@ export default {
       return null
     }
 
-    // 数据获取
+    // 启动/重置自动刷新计时器
+    const startAutoRefresh = (interval) => {
+        stopAutoRefresh(); // 先清除旧的计时器
+        
+        if (interval > 0) {
+            autoRefreshTimer = setInterval(() => {
+                console.log(`[Auto Refresh] 自动刷新触发 (${interval / 1000}秒)`);
+                // 仅当非手动加载时才触发
+                if (!loading.value) { 
+                    fetchData();
+                }
+            }, interval);
+        }
+    }
+    
+    // 停止自动刷新计时器
+    const stopAutoRefresh = () => {
+        if (autoRefreshTimer) {
+            clearInterval(autoRefreshTimer);
+            autoRefreshTimer = null;
+        }
+    }
+    
+    // 自动刷新选择器变动处理
+    const handleAutoRefreshChange = () => {
+        const interval = autoRefreshInterval.value;
+        startAutoRefresh(interval);
+    }
+    
+    // 手动刷新按钮处理
+    const handleManualRefresh = () => {
+        if (loading.value) return; 
+        
+        console.log('[Manual Refresh] 手动刷新触发。');
+        // 立即获取数据
+        fetchData(); 
+    }
+
+
+    // 数据获取 (核心函数，控制 loading 状态)
     const fetchData = async (customTimeRange) => {
-      loading.value = true // 设为 true，图表容器被隐藏
+      // 避免并发请求
+      if (loading.value) return; 
+      
+      loading.value = true 
       
       try {
         const range = customTimeRange || timeRange.value
         const response = await fetch(`/api/web/dashboard?timeRange=${range}`)
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json()
 
         if (result.success) {
           const data = result.data
           
-          // 更新总览数据
           summaryData.value = [
             { title: '邮件总数', value: data.summary.totalCount, icon: icons.mail, color: 'text-indigo-400' },
             { title: '正常总数', value: data.summary.normalCount, icon: icons.check, color: 'text-green-400' },
@@ -262,23 +349,22 @@ export default {
             { title: '人工确认', value: data.summary.manualCount, icon: icons.user, color: 'text-purple-400' }
           ]
           
-          // 存储数据
           lastTrendData = data.trendData
           lastActionData = data.actionTrendData
           
-          // 更新表格 (使用 ai_reason，请确保后端匹配)
           detectionRecords.value = data.records
+        } else {
+             console.error('API返回失败状态:', result.message || '未知错误')
         }
       } catch (error) {
-        console.error('获取数据失败:', error)
+        console.error('获取数据失败或网络错误:', error)
       } finally {
-        // 1. 设置 loading 为 false，触发 v-else 容器渲染
+        // 无论成功还是失败，都必须将 loading 设为 false
         loading.value = false 
         
-        // 2. 在下一个 DOM 周期（容器已渲染）后初始化图表
+        // 使用 nextTick 确保 DOM 容器已渲染
         await nextTick() 
         
-        // 3. 此时 chartContainer.value 应该已经可用
         if (lastTrendData) {
             initChart(lastTrendData)
         }
@@ -288,25 +374,22 @@ export default {
       }
     }
 
-    // 初始化趋势图 (已修改：添加 dispose)
+    // 初始化趋势图 (包含 dispose 优化)
     const initChart = (trendData) => {
       const echarts = getEcharts()
-      if (!chartContainer.value || !echarts) {
-        console.error('Chart container or echarts not available')
-        return
-      }
+      if (!chartContainer.value || !echarts) return
       
-      // 💥 关键修正：先销毁旧实例，再重新初始化
+      // 性能优化关键：销毁旧实例
       if (chartInstance) {
           chartInstance.dispose();
           chartInstance = null; 
       }
       
-      // 重新初始化实例
       chartInstance = echarts.init(chartContainer.value, 'dark')
       chartInstance.resize()
 
       const option = {
+        // ... (Echarts Option 不变) ...
         backgroundColor: 'transparent',
         tooltip: {
           trigger: 'axis',
@@ -392,29 +475,25 @@ export default {
           }
         ]
       }
-
       chartInstance.setOption(option)
     }
 
-    // 初始化动作图 (已修改：添加 dispose)
+    // 初始化动作图 (包含 dispose 优化)
     const initActionChart = (actionData) => {
       const echarts = getEcharts()
-      if (!actionChartContainer.value || !echarts) {
-        console.error('Action chart container or echarts not available')
-        return
-      }
+      if (!actionChartContainer.value || !echarts) return
       
-      // 💥 关键修正：先销毁旧实例，再重新初始化
+      // 性能优化关键：销毁旧实例
       if (actionChartInstance) {
           actionChartInstance.dispose();
           actionChartInstance = null;
       }
 
-      // 重新初始化实例
       actionChartInstance = echarts.init(actionChartContainer.value, 'dark')
       actionChartInstance.resize()
 
       const option = {
+        // ... (Echarts Option 不变) ...
         backgroundColor: 'transparent',
         tooltip: {
           trigger: 'axis',
@@ -472,29 +551,32 @@ export default {
       } else {
         timeRange.value = displayTimeRange.value
         fetchData()
+        // 时间范围变化不影响自动刷新计时器，但需要重新启动以应用当前设置
+        startAutoRefresh(autoRefreshInterval.value);
       }
     }
 
     const handleCustomTimeConfirm = () => {
       if (startDate.value && endDate.value) {
-        // Convert to milliseconds timestamp for backend
         const start = new Date(startDate.value).getTime()
         const end = new Date(endDate.value).getTime()
         timeRange.value = `${start}-${end}`
         showDatePicker.value = false
         fetchData()
+        startAutoRefresh(autoRefreshInterval.value);
       }
     }
 
     const handleCustomTimeCancel = () => {
       showDatePicker.value = false
-      // 重置下拉框回 '12h'
       displayTimeRange.value = '12h'
       timeRange.value = '12h'
       fetchData()
+      startAutoRefresh(autoRefreshInterval.value);
     }
 
     const toggleMaximize = (chartIndex) => {
+      // ... (最大化逻辑不变) ...
       if (chartIndex === 1) {
         isMaximizedChart1.value = !isMaximizedChart1.value
         if (isMaximizedChart1.value) isMaximizedChart2.value = false
@@ -504,12 +586,12 @@ export default {
       }
 
       nextTick(() => {
-        // 在 DOM 重新布局后，强制图表重绘以适应新尺寸
         if (chartInstance) chartInstance.resize()
         if (actionChartInstance) actionChartInstance.resize()
       })
     }
 
+    // ... (getResultClass, getStatusClass 保持不变) ...
     const getResultClass = (result) => {
       const classes = {
         '钓鱼邮件': 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-800 text-red-300',
@@ -533,12 +615,23 @@ export default {
     // 生命周期
     onMounted(() => {
       fetchData()
+      startAutoRefresh(autoRefreshInterval.value) // 使用默认值启动
       
       window.addEventListener('resize', () => {
         if (chartInstance) chartInstance.resize()
         if (actionChartInstance) actionChartInstance.resize()
       })
     })
+    
+    // 组件卸载前清除计时器，防止内存泄漏
+    onBeforeUnmount(() => {
+        stopAutoRefresh();
+        window.removeEventListener('resize', () => {
+            if (chartInstance) chartInstance.resize()
+            if (actionChartInstance) actionChartInstance.resize()
+        });
+    })
+
 
     return {
       timeRange,
@@ -553,12 +646,15 @@ export default {
       isMaximizedChart2,
       chartContainer,
       actionChartContainer,
+      autoRefreshInterval, // 暴露给模板
       handleTimeRangeChange,
       handleCustomTimeConfirm,
       handleCustomTimeCancel,
       toggleMaximize,
       getResultClass,
-      getStatusClass
+      getStatusClass,
+      handleManualRefresh, // 更改名称以区分
+      handleAutoRefreshChange, // 暴露给模板
     }
   }
 }
