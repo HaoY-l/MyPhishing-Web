@@ -236,7 +236,7 @@
 
 <script>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue' 
-
+import { statsApi } from '../api'
 // 默认自动刷新间隔 (1 分钟)
 const DEFAULT_REFRESH_INTERVAL = 60000; 
 
@@ -332,16 +332,7 @@ export default {
       
       try {
         const range = customTimeRange || timeRange.value
-        const response = await fetch(`/api/web/dashboard?timeRange=${range}`)
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json()
-
-        if (result.success) {
-          const data = result.data
+        const data = await statsApi.getDashboardStats(range)
           
           summaryData.value = [
             { title: '邮件总数', value: data.summary.totalCount, icon: icons.mail, color: 'text-indigo-400' },
@@ -355,9 +346,7 @@ export default {
           lastActionData = data.actionTrendData
           
           detectionRecords.value = data.records
-        } else {
-             console.error('API返回失败状态:', result.message || '未知错误')
-        }
+
       } catch (error) {
         console.error('获取数据失败或网络错误:', error)
       } finally {
