@@ -196,31 +196,36 @@
           <table class="min-w-full divide-y divide-slate-700">
             <thead class="bg-slate-800/50">
               <tr class="text-left text-xs font-semibold text-slate-400 uppercase">
-                <th class="py-2 px-3">时间</th>
-                <th class="py-2 px-3">邮件 ID</th>
-                <th class="py-2 px-3">发件人</th>
-                <th class="py-2 px-3">检测结果</th>
-                <th class="py-2 px-3 w-1/4">AI分析</th>
-                <th class="py-2 px-3">处理状态</th>
-                 </tr>
+                <th class="py-2 px-3 w-1/12">时间</th>
+                <th class="py-2 px-3 w-1/12">邮件 ID</th>
+                <th class="py-2 px-3 w-2/12">发件人</th>
+                <th class="py-2 px-3 w-2/12">收件人</th>
+                <th class="py-2 px-3 w-2/12">邮件主题</th>
+                <th class="py-2 px-3 w-1/12">检测结果</th>
+                <th class="py-2 px-3 w-2/12">AI分析</th>
+                <th class="py-2 px-3 w-1/12">处理状态</th>
+              </tr>
             </thead>
             <tbody class="divide-y divide-slate-800">
               <tr v-for="record in detectionRecords" :key="record.id" class="hover:bg-slate-800/30 transition">
                 <td class="py-2 px-3 text-xs text-slate-300">{{ record.time }}</td>
-                <td class="py-2 px-3 text-xs text-indigo-300 font-mono">{{ record.id }}</td>
-                <td class="py-2 px-3 text-xs text-slate-300 truncate max-w-xs">{{ record.sender }}</td>
+                <td class="py-2 px-3 text-xs text-indigo-300 font-mono truncate max-w-[80px]" :title="record.id">{{ record.id }}</td>
+                <td class="py-2 px-3 text-xs text-slate-300 truncate max-w-[150px]" :title="record.sender">{{ record.sender }}</td>
+                <td class="py-2 px-3 text-xs text-slate-400 truncate max-w-[150px]" :title="record.recipient">{{ record.recipient }}</td>
+                <td class="py-2 px-3 text-xs text-slate-300 truncate max-w-[180px]" :title="record.subject">{{ record.subject }}</td>
                 <td class="py-2 px-3 text-xs">
                   <span :class="getResultClass(record.result)">{{ record.result }}</span>
                 </td>
-                <td class="py-2 px-3 text-xs text-slate-400 max-w-md truncate" :title="record.ai_reason">
+                <td class="py-2 px-3 text-xs text-slate-400 truncate max-w-[200px]" :title="record.ai_reason">
                   {{ record.ai_reason }}
                 </td>
                 <td class="py-2 px-3 text-xs">
                   <span :class="getStatusClass(record.status)">{{ record.status }}</span>
                 </td>
-                 </tr>
+              </tr>
               <tr v-if="!loading && detectionRecords.length === 0">
-                <td colspan="6" class="text-center py-4 text-slate-400">暂无检测记录</td> </tr>
+                <td colspan="8" class="text-center py-4 text-slate-400">暂无检测记录</td> 
+              </tr>
             </tbody>
           </table>
         </div>
@@ -253,14 +258,14 @@ export default {
     const showDatePicker = ref(false)
     const startDate = ref('')
     const endDate = ref('')
-    const loading = ref(false) // 初始值改为 false，确保首次加载正常
+    const loading = ref(false) 
     const summaryData = ref([])
     const detectionRecords = ref([])
     const isMaximizedChart1 = ref(false)
     const isMaximizedChart2 = ref(false)
     
     // 自动刷新状态
-    const autoRefreshInterval = ref(DEFAULT_REFRESH_INTERVAL) // 默认 1 分钟
+    const autoRefreshInterval = ref(DEFAULT_REFRESH_INTERVAL) 
     let autoRefreshTimer = null;
     
     // 用于在 loading 状态下传递数据
@@ -284,12 +289,11 @@ export default {
 
     // 启动/重置自动刷新计时器
     const startAutoRefresh = (interval) => {
-        stopAutoRefresh(); // 先清除旧的计时器
+        stopAutoRefresh(); 
         
         if (interval > 0) {
             autoRefreshTimer = setInterval(() => {
                 console.log(`[Auto Refresh] 自动刷新触发 (${interval / 1000}秒)`);
-                // 仅当非手动加载时才触发
                 if (!loading.value) { 
                     fetchData();
                 }
@@ -316,14 +320,12 @@ export default {
         if (loading.value) return; 
         
         console.log('[Manual Refresh] 手动刷新触发。');
-        // 立即获取数据
         fetchData(); 
     }
 
 
     // 数据获取 (核心函数，控制 loading 状态)
     const fetchData = async (customTimeRange) => {
-      // 避免并发请求
       if (loading.value) return; 
       
       loading.value = true 
@@ -359,10 +361,8 @@ export default {
       } catch (error) {
         console.error('获取数据失败或网络错误:', error)
       } finally {
-        // 无论成功还是失败，都必须将 loading 设为 false
         loading.value = false 
         
-        // 使用 nextTick 确保 DOM 容器已渲染
         await nextTick() 
         
         if (lastTrendData) {
@@ -379,7 +379,6 @@ export default {
       const echarts = getEcharts()
       if (!chartContainer.value || !echarts) return
       
-      // 性能优化关键：销毁旧实例
       if (chartInstance) {
           chartInstance.dispose();
           chartInstance = null; 
@@ -389,7 +388,6 @@ export default {
       chartInstance.resize()
 
       const option = {
-        // ... (Echarts Option 不变) ...
         backgroundColor: 'transparent',
         tooltip: {
           trigger: 'axis',
@@ -483,7 +481,6 @@ export default {
       const echarts = getEcharts()
       if (!actionChartContainer.value || !echarts) return
       
-      // 性能优化关键：销毁旧实例
       if (actionChartInstance) {
           actionChartInstance.dispose();
           actionChartInstance = null;
@@ -493,7 +490,6 @@ export default {
       actionChartInstance.resize()
 
       const option = {
-        // ... (Echarts Option 不变) ...
         backgroundColor: 'transparent',
         tooltip: {
           trigger: 'axis',
@@ -551,7 +547,6 @@ export default {
       } else {
         timeRange.value = displayTimeRange.value
         fetchData()
-        // 时间范围变化不影响自动刷新计时器，但需要重新启动以应用当前设置
         startAutoRefresh(autoRefreshInterval.value);
       }
     }
@@ -576,7 +571,6 @@ export default {
     }
 
     const toggleMaximize = (chartIndex) => {
-      // ... (最大化逻辑不变) ...
       if (chartIndex === 1) {
         isMaximizedChart1.value = !isMaximizedChart1.value
         if (isMaximizedChart1.value) isMaximizedChart2.value = false
@@ -591,7 +585,6 @@ export default {
       })
     }
 
-    // ... (getResultClass, getStatusClass 保持不变) ...
     const getResultClass = (result) => {
       const classes = {
         '钓鱼邮件': 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-800 text-red-300',
@@ -615,7 +608,7 @@ export default {
     // 生命周期
     onMounted(() => {
       fetchData()
-      startAutoRefresh(autoRefreshInterval.value) // 使用默认值启动
+      startAutoRefresh(autoRefreshInterval.value) 
       
       window.addEventListener('resize', () => {
         if (chartInstance) chartInstance.resize()
@@ -646,21 +639,22 @@ export default {
       isMaximizedChart2,
       chartContainer,
       actionChartContainer,
-      autoRefreshInterval, // 暴露给模板
+      autoRefreshInterval, 
       handleTimeRangeChange,
       handleCustomTimeConfirm,
       handleCustomTimeCancel,
       toggleMaximize,
       getResultClass,
       getStatusClass,
-      handleManualRefresh, // 更改名称以区分
-      handleAutoRefreshChange, // 暴露给模板
+      handleManualRefresh, 
+      handleAutoRefreshChange, 
     }
   }
 }
 </script>
 
 <style scoped>
+/* 滚动条样式 (不变) */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
