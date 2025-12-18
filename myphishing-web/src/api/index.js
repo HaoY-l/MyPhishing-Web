@@ -53,3 +53,26 @@ export const aiApi = {
     return request.post('/api/web/aidata', params)
   }
 }
+
+// ========== 配置管理接口（新增） ==========
+export const settingApi = {
+  /**
+   * 获取配置（对应后端 GET /api/web/setting）
+   */
+  getConfig() {
+    return request.get('/api/web/setting')
+  },
+  /**
+   * 保存配置（对应后端 POST /api/web/setting）
+   * @param {Object} config - 配置数据
+   */
+  saveConfig(config) {
+    return request.post('/api/web/setting', config)
+  },
+  /**
+   * 恢复默认配置（对应后端 POST /api/web/setting）
+   */
+  resetConfig() {
+    return request.post('/api/web/setting', { action: 'reset' })
+  }
+}
