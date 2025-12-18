@@ -39,6 +39,12 @@ const routes = [
         path: 'reports',
         name: 'Reports',
         component: () => import('@/views/Reports.vue')
+      },
+      // 关键：添加系统设置路由到 children 数组中
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('@/views/Settings.vue') // 懒加载方式，和其他路由保持一致
       }
     ]
   }

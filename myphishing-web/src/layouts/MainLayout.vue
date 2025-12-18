@@ -78,6 +78,29 @@
             <span class="font-medium">{{ item.label }}</span>
           </button>
         </router-link>
+        
+        <!-- 分隔线
+        <div class="my-2 border-t border-slate-800"></div>
+         -->
+        <!-- 系统设置菜单 -->
+        <router-link
+          to="/settings"
+          custom
+          v-slot="{ isActive, navigate }"
+        >
+          <button
+            @click="navigate"
+            :class="[
+              'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              isActive 
+                ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30' 
+                : 'hover:bg-slate-800/50 border border-transparent'
+            ]"
+          >
+            <Settings :class="['w-5 h-5', 'text-amber-400']" />
+            <span class="font-medium">系统设置</span>
+          </button>
+        </router-link>
       </div>
     </aside>
 
@@ -97,7 +120,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Menu, X, Shield, Search, Bell, User, BarChart3, Mail, Database, Brain, FileText } from 'lucide-vue-next'
+// 新增 Settings 图标导入
+import { Menu, X, Shield, Search, Bell, User, BarChart3, Mail, Database, Brain, FileText, Settings } from 'lucide-vue-next'
 
 const sidebarOpen = ref(true)
 const searchQuery = ref('')
