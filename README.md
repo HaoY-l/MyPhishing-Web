@@ -26,23 +26,22 @@ MyPhishing-Web是AI 钓鱼邮件检测网关的前端可视化平台，支持钓
 ### 1.3 项目结构
 
 ```text
-MyPhishing-Web/
-├── myphishing-web/          # 前端项目主目录
-│   ├── .vscode/             # VS Code 配置目录
-│   ├── node_modules/        # npm 依赖包目录
-│   ├── public/              # 静态资源目录（如图片、字体等）
-│   ├── src/                 # 前端核心代码目录（组件、逻辑、样式等）
-│   ├── .env                 # 前端环境变量配置文件
-│   ├── .gitignore           # Git 忽略文件配置
-│   ├── docker-compose.yml   # Docker 编排配置文件
-│   ├── Dockerfile           # Docker 构建配置文件
-│   ├── index.html           # 前端入口 HTML 文件
-│   ├── package-lock.json    # npm 依赖版本锁定文件
-│   ├── package.json         # npm 项目配置（依赖、脚本等）
-│   ├── postcss.config.js    # PostCSS 配置文件
-│   ├── README.md            # 前端项目说明文档
-│   ├── tailwind.config.js   # Tailwind CSS 配置文件
-│   └── vite.config.js       # Vite 构建/开发配置文件
+MyPhishing-Web/         # 前端项目主目录
+│── .vscode/             # VS Code 配置目录
+│── node_modules/        # npm 依赖包目录
+│── public/              # 静态资源目录（如图片、字体等）
+│── src/                 # 前端核心代码目录（组件、逻辑、样式等）
+│── .env                 # 前端环境变量配置文件
+│── .gitignore           # Git 忽略文件配置
+│── docker-compose.yml   # Docker 编排配置文件
+│── Dockerfile           # Docker 构建配置文件
+│── index.html           # 前端入口 HTML 文件
+│── package-lock.json    # npm 依赖版本锁定文件
+│── package.json         # npm 项目配置（依赖、脚本等）
+│── postcss.config.js    # PostCSS 配置文件
+│── README.md            # 前端项目说明文档
+│── tailwind.config.js   # Tailwind CSS 配置文件
+│── vite.config.js       # Vite 构建/开发配置文件
 ├── .gitignore               # 根目录 Git 忽略文件
 ├── LICENSE                  # 项目开源协议文件
 └── README.md                # 项目根目录说明文档
