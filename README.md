@@ -77,7 +77,7 @@ VITE_API_BASE_URL=http://你的后端服务地址:后端端口
 
 ```bash
 # 进入前端项目目录
-cd MyPhishing-Web/myphishing-web
+cd MyPhishing-Web
 
 # 安装依赖
 npm install
@@ -95,7 +95,7 @@ npm run dev
 
 ```bash
 # 进入项目目录
-cd MyPhishing-Web/myphishing-web
+cd MyPhishing-Web
 
 # 构建并启动容器
 docker-compose up -d --build
