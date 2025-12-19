@@ -24,7 +24,6 @@
                   type="text" 
                   class="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-500"
                   placeholder="例如：eb9fbcfd-ccea-4797-b65c-616720848c1c"
-                  value="eb9fbcfd-ccea-4797-b65c-616720848c1c"
                 />
               </div>
               <!-- 邮件文本输入框 -->
@@ -165,7 +164,7 @@ import {
 import { aiApi } from '@/api/index'
 
 // ==================== 响应式数据 ====================
-const emailId = ref('eb9fbcfd-ccea-4797-b65c-616720848c1c')
+const emailId = ref('286bf511-6b9a-4844-b8a6-6e2566b9bb68')
 const emailText = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
@@ -226,35 +225,27 @@ const submitAnalysis = async () => {
       email_text: emailText.value.trim()
     }
 
-    // 直接调用接口，不依赖request封装的额外处理
-    const response = await fetch('/api/web/aidata', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestData)
-    })
+    // 使用 index.js 中定义的 aiApi.analyzeEmail 方法
+    const result = await aiApi.analyzeEmail(requestData)
+    console.log('后端原始返回数据:', result)
 
-    const result = await response.json()
-    console.log('后端原始返回数据:', result) // 调试用，可删除
-
-    // 匹配后端实际返回格式（code=200且success=true）
-    if (result.code === 200 && result.success) {
-      if (result.data) {
-        analysisResult.value = result.data
-        // 模拟分析进度
-        setTimeout(() => { analysisStatus.value.content = true }, 300)
-        setTimeout(() => { analysisStatus.value.sender = true }, 600)
-        setTimeout(() => { analysisStatus.value.url = true }, 900)
-        setTimeout(() => { analysisStatus.value.threat = true }, 1200)
-        setTimeout(() => { analysisStatus.value.feature = true }, 1500)
-        setTimeout(() => { analysisStatus.value.risk = true }, 1800)
-      } else {
-        showEmptyTip.value = true
-      }
+    // request 拦截器已经处理了字段转换和数据提取
+    // 直接使用 result（已是 ai_analysis 对象）
+    if (result && (result.riskLevel !== undefined || result.confidence)) {
+      analysisResult.value = result
+      
+      // 模拟分析进度
+      setTimeout(() => { analysisStatus.value.content = true }, 300)
+      setTimeout(() => { analysisStatus.value.sender = true }, 600)
+      setTimeout(() => { analysisStatus.value.url = true }, 900)
+      setTimeout(() => { analysisStatus.value.threat = true }, 1200)
+      setTimeout(() => { analysisStatus.value.feature = true }, 1500)
+      setTimeout(() => { analysisStatus.value.risk = true }, 1800)
     } else {
-      errorMsg.value = result.message || '分析失败，请稍后重试'
+      showEmptyTip.value = true
     }
   } catch (error) {
-    errorMsg.value = `分析失败：${error.message || '服务器连接异常'}`
+    errorMsg.value = error.message || '分析失败，请稍后重试'
     console.error('调用失败:', error)
   } finally {
     loading.value = false
