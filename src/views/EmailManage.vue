@@ -112,8 +112,8 @@
           >
             <option value="">全部状态</option>
             <option value="normal">正常邮件</option>
-            <option value="phishing">钓鱼邮件</option>
             <option value="suspicious">可疑邮件</option>
+            <option value="phishing">钓鱼邮件</option>
           </select>
           
           <div class="relative">
@@ -177,7 +177,7 @@
                     'px-2 py-1 rounded-full text-xs'
                   ]"
                 >
-                  {{ email.status === 'normal' ? '正常' : email.status === 'phishing' ? '钓鱼' : '可疑' }}
+                  {{ email.status === 'normal' ? '正常' : email.status === 'suspicious' ? '可疑' : '钓鱼' }}
                 </span>
               </td>
               <td class="py-3 px-4 text-slate-300 text-sm">{{ email.time }}</td>

@@ -337,8 +337,8 @@ export default {
           summaryData.value = [
             { title: '邮件总数', value: data.summary.totalCount, icon: icons.mail, color: 'text-indigo-400' },
             { title: '正常总数', value: data.summary.normalCount, icon: icons.check, color: 'text-green-400' },
-            { title: '钓鱼邮件', value: data.summary.phishingCount, icon: icons.alert, color: 'text-red-400' },
             { title: '可疑总数', value: data.summary.suspiciousCount, icon: icons.help, color: 'text-yellow-400' },
+            { title: '钓鱼邮件', value: data.summary.phishingCount, icon: icons.alert, color: 'text-red-400' },
             { title: '人工确认', value: data.summary.manualCount, icon: icons.user, color: 'text-purple-400' }
           ]
           
