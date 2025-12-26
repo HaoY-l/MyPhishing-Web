@@ -32,7 +32,7 @@
       <!-- 可疑邮件配置分组 -->
       <div class="mb-8">
         <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
-          <Settings class="w-5 h-5 text-amber-400" />
+          <Mail class="w-5 h-5 text-amber-400" />
           可疑邮件（通道1）配置
         </h2>
         <div class="space-y-6 pl-4 border-l-2 border-slate-700">
@@ -123,6 +123,35 @@
         </div>
       </div>
 
+      <!--告警通知邮箱配置 -->
+      <div class="mt-8">
+        <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+          <Settings class="w-5 h-5 text-amber-400" />
+          告警通知配置
+        </h2>
+        <div class="space-y-4 pl-4 border-l-2 border-slate-700">
+          <div>
+            <label class="block mb-2">
+              <span class="font-medium">告警通知邮箱</span>
+              <span class="text-sm text-slate-400 ml-2">（接收安全告警邮件的邮箱地址）</span>
+            </label>
+            <input
+              type="email"
+              v-model="config.NOTIFICATION_EMAIL"
+              placeholder="请输入邮箱地址，如: security@example.com"
+              :disabled="saveLoading"
+              class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+            />
+            <p class="text-xs text-slate-500 mt-2">
+              {{ config.NOTIFICATION_EMAIL 
+                ? `✅ 当前配置：${config.NOTIFICATION_EMAIL}` 
+                : '❌ 未配置（告警功能将无法发送邮件通知）' 
+              }}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- 操作按钮 -->
       <div class="mt-8 flex justify-end gap-4">
         <button
@@ -152,7 +181,7 @@
 import { ref, onMounted } from 'vue'
 import { Settings, Loader2, AlertCircle } from 'lucide-vue-next'
 import { settingApi } from '@/api'
-
+import { Settings, Loader2, AlertCircle, Mail } from 'lucide-vue-next'
 // 响应式数据
 const config = ref({})          
 const loading = ref(true)       
@@ -188,11 +217,28 @@ const fetchConfig = async () => {
  */
 const saveConfig = async () => {
   try {
+    // 【新增】邮箱格式验证
+    if (config.value.NOTIFICATION_EMAIL) {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+      if (!emailRegex.test(config.value.NOTIFICATION_EMAIL)) {
+        alert('❌ 邮箱格式不正确，请检查后重新输入！')
+        return
+      }
+    }
+    
+    // 【新增】告警开关与邮箱的关联提示
+    if ((config.value.EMAIL_ALERT_ENABLED_1 || config.value.EMAIL_ALERT_ENABLED_2) 
+        && !config.value.NOTIFICATION_EMAIL) {
+      if (!confirm('⚠️ 检测到告警开关已开启，但未配置通知邮箱，告警将无法发送！\n\n是否继续保存？')) {
+        return
+      }
+    }
+    
     saveLoading.value = true
     
     await settingApi.saveConfig(config.value)
     await fetchConfig()
-    alert('配置保存成功！所有开关状态已同步到后端。')
+    alert('✅ 配置保存成功！所有开关状态已同步到后端。')
     
   } catch (error) {
     console.error('提交配置失败:', error)
