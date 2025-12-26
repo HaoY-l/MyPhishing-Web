@@ -179,7 +179,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Settings, Loader2, AlertCircle } from 'lucide-vue-next'
 import { settingApi } from '@/api'
 import { Settings, Loader2, AlertCircle, Mail } from 'lucide-vue-next'
 // 响应式数据
