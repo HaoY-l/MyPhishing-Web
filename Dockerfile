@@ -11,18 +11,13 @@ RUN npm install --registry=https://registry.npmmirror.com
 COPY . .
 RUN npm run build
 
-# 运行阶段：用Node.js静态服务启动
-FROM node:18-alpine
-WORKDIR /app
+# 运行阶段：替换为 nginx:alpine（轻量运行时，核心优化点）
+FROM nginx:alpine
+# 从构建阶段复制 dist 文件夹到 Nginx 静态资源目录
+# Nginx 默认静态目录：/usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# 安装静态服务包（支持Vue路由history模式）
-RUN npm install -g serve
+# 暴露 Nginx 默认端口（80，可根据你的需求修改）
+EXPOSE 80
 
-# 从构建阶段复制dist文件夹
-COPY --from=build /app/dist /app/dist
-
-# 暴露端口
-EXPOSE 3000
-
-# 启动前端（-s支持history路由）
-CMD ["serve", "-s", "dist", "-l", "3000"]
+# Nginx 容器默认会自动启动服务，无需额外写 CMD 命令
