@@ -4,7 +4,7 @@
 | 版本 | 更新日期 | 适用人群 |
 | --- | --- | --- |
 | **V1.0** | 2025-12-18 | 后端开发、运维人员、安全人员 |
-
+MyPhishing-Web 用户手册：[MyPhishing-Web 用户手册](https://www.yuque.com/weare/qqlqbo/lvufgnruaox87vh3?singleDoc#)
 ---
 
 ## 一、 项目概述
