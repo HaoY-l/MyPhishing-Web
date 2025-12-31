@@ -14,6 +14,7 @@ MyPhishing-Web是AI 钓鱼邮件检测网关的前端可视化平台，支持钓
 
 **MyPhishing**（后端网关）是一款 **AI 钓鱼邮件检测网关**，通过集成多源威胁情报（如 VirusTotal、微步在线）、沙箱技术以及 AI 算法，实现对邮件来源 IP、域名、URL、附件及内容关键字的深度识别、告警与拦截，并支持通过本地知识库持续学习进化。   
 ![实现逻辑](picture/架构图.png)
+**在线演示地址：**[MyPhishing](https://myphishing.hyinfo.cc/)   
 **后端项目地址：**[MyPhishing-BacKend](https://github.com/HaoY-l/MyPhishing-BacKend)   
 **在线用户手册：**[MyPhishing-Web 用户手册](https://www.yuque.com/weare/qqlqbo/lvufgnruaox87vh3?singleDoc#)
 
