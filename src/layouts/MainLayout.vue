@@ -3,7 +3,7 @@
     
     <!-- 顶部导航栏 -->
     <nav class="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 z-50">
-      <div class="h-full px-6 flex items-center justify-between">
+      <div class="h-full px-3 md:px-6 flex items-center justify-between">
         <div class="flex items-center gap-4">
           <button 
             @click="sidebarOpen = !sidebarOpen"
@@ -17,7 +17,7 @@
             <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
               <Shield class="w-6 h-6" />
             </div>
-            <div>
+            <div class="hidden sm:block">
               <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 邮件安全检测平台
               </h1>
@@ -26,15 +26,15 @@
           </div>
         </div>
         
-        <div class="flex items-center gap-4">
-          <div class="relative">
+        <div class="flex items-center gap-3 md:gap-4">
+          <div class="relative hidden sm:block">
             <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               v-model="searchQuery"
               type="text"
               placeholder="搜索邮件 ID..."
               @keyup.enter="handleSearch"
-              class="w-64 pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-white placeholder-slate-400"
+              class="w-48 md:w-64 pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-white placeholder-slate-400"
             />
           </div>
           
@@ -53,7 +53,8 @@
     <!-- 侧边栏 -->
     <aside 
       :class="[
-        'fixed left-0 top-16 bottom-0 w-64 bg-slate-900/50 backdrop-blur-xl border-r border-slate-800 transition-transform duration-300 z-40',
+        'fixed left-0 top-16 bottom-0 backdrop-blur-xl border-r border-slate-800 transition-transform duration-300 z-40',
+        'md:w-64 w-full',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
@@ -79,9 +80,6 @@
           </button>
         </router-link>
         
-        <!-- 分隔线
-        <div class="my-2 border-t border-slate-800"></div>
-         -->
         <!-- 系统设置菜单 -->
         <router-link
           to="/settings"
@@ -104,9 +102,19 @@
       </div>
     </aside>
 
+    <!-- 移动端遮罩层 -->
+    <div 
+      v-if="sidebarOpen"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden"
+      @click="sidebarOpen = false"
+    ></div>
+
     <!-- 主内容区域 -->
-    <main :class="['pt-16 transition-all duration-300', sidebarOpen ? 'pl-64' : 'pl-0']">
-      <div class="p-8">
+    <main :class="[
+      'pt-16 transition-all duration-300',
+      sidebarOpen ? 'md:pl-64 pl-0' : 'pl-0'
+    ]">
+      <div class="p-4 md:p-8">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" />
@@ -119,11 +127,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-// 新增 Settings 图标导入
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Menu, X, Shield, Search, Bell, User, BarChart3, Mail, Database, Brain, FileText, Settings } from 'lucide-vue-next'
 
-const sidebarOpen = ref(true)
+const sidebarOpen = ref(false)
 const searchQuery = ref('')
 
 const navigationItems = [
@@ -140,6 +147,24 @@ const handleSearch = () => {
     console.log('搜索邮件:', searchQuery.value)
   }
 }
+
+// 监听窗口大小变化，实现响应式侧边栏切换
+const handleResize = () => {
+  // md 断点（768px）：桌面端默认打开侧边栏，移动端默认隐藏
+  const isDesktop = window.innerWidth >= 768
+  sidebarOpen.value = isDesktop
+}
+
+// 组件挂载时初始化并添加监听
+onMounted(() => {
+  handleResize()
+  window.addEventListener('resize', handleResize)
+})
+
+// 组件卸载时移除监听，防止内存泄漏
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <style scoped>
